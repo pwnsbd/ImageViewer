@@ -1,0 +1,47 @@
+# ---- Qt/Qt Creator ----
+# IDE/user-specific
+*.pro.user
+*.pro.user.*
+*.creator.user
+*.kate-swp
+*.swp
+*.DS_Store
+
+# Build directories (common Qt Creator patterns)
+build-*/
+bin/
+obj/
+out/
+[Cc]Make[Bb]uild*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+*.make
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+*.qm
+
+# Platform-specific binaries/objects
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+*.pdb
+
+# Qt caches
+.qmake.stash
+.qtc_clangd/
+.idea/
+.vscode/
+
+# Logs & temps
+*.log
+*.tmp
+*.temp
