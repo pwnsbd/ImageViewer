@@ -3,40 +3,46 @@
 
 #include <QString>
 
-enum class PropertyId{
+enum class PropertyId {
     Brightness,
     Contrast,
 };
 
-class ImageProperty{
+class ImageProperty {
 
 public:
     ImageProperty(PropertyId id,
                   const QString& name,
                   int minValue,
                   int maxValue,
-                  int initialValue
-                  ) : m_id(id), m_name(name), m_min(minValue), m_max(maxValue), m_initial(initialValue) {}
+                  int initialValue)
+        : m_id(id)
+        , m_name(name)
+        , m_min(minValue)
+        , m_max(maxValue)
+        , m_value(initialValue)
+    {}
 
-PropertyId id() const {return m_id;}
-    const QString& name() const {return m_name;}
-int min() const {return m_min;}
-    int max() const {return m_max;}
-int value() const {return m_initial;}
+    PropertyId id() const         { return m_id; }
+    const QString& name() const   { return m_name; }
 
-void setValue(int value)
-{
-    if (value < m_min) value = m_min;
-    if (value > m_max) value = m_max;
-    m_initial = value;
-}
+    int min() const               { return m_min; }
+    int max() const               { return m_max; }
+    int value() const             { return m_value; }
+
+    void setValue(int value)
+    {
+        if (value < m_min) value = m_min;
+        if (value > m_max) value = m_max;
+        m_value = value;
+    }
 
 private:
     PropertyId m_id;
-    QString m_name;
-    int m_min;
-    int m_max;
-    int m_initial;
+    QString    m_name;
+    int        m_min;
+    int        m_max;
+    int        m_value;  // current value (0–100 for both brightness & contrast)
 };
 
 #endif // IMAGEPROPERTY_H

@@ -32,18 +32,16 @@ private:
 
     QVBoxLayout *m_propertiesLayout = nullptr;
 
-    // One control per property
     struct PropertyControl {
         PropertyId id;
-        QSlider* slider;
-        QLabel*  label;
+        QSlider*   slider;
+        QLabel*    label;
     };
     QVector<PropertyControl> m_propertyControls;
 
 private slots:
     void onOpenFolderClicked();
     void onImageSelected(QListWidgetItem *item);
-
     void onPropertySliderChanged(int value);
 
 private:

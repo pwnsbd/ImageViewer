@@ -16,15 +16,14 @@ ImageViewer::ImageViewer(QWidget *parent)
     connect(ui->folderListWidget, &QListWidget::itemClicked,
             this, &ImageViewer::onImageSelected);
 
-    // Create a vertical layout for the dynamic property controls
     m_propertiesLayout = new QVBoxLayout(ui->propertiesPanel);
     m_propertiesLayout->setContentsMargins(4, 4, 4, 4);
     m_propertiesLayout->setSpacing(6);
 }
 
+
 void ImageViewer::clearPropertiesUI()
 {
-    // Remove and delete all widgets in the layout
     while (QLayoutItem* item = m_propertiesLayout->takeAt(0)) {
         if (QWidget* w = item->widget()) {
             w->deleteLater();
@@ -34,6 +33,7 @@ void ImageViewer::clearPropertiesUI()
     m_propertyControls.clear();
 }
 
+
 void ImageViewer::rebuildPropertiesUI(ImageItem &item)
 {
     clearPropertiesUI();
@@ -42,7 +42,6 @@ void ImageViewer::rebuildPropertiesUI(ImageItem &item)
 
     for (const ImageProperty &prop : props) {
 
-        // For now we only handle Brightness + Contrast
         if (prop.id() != PropertyId::Brightness &&
             prop.id() != PropertyId::Contrast)
             continue;
@@ -55,28 +54,9 @@ void ImageViewer::rebuildPropertiesUI(ImageItem &item)
         QLabel *label = new QLabel(prop.name(), row);
         QSlider *slider = new QSlider(Qt::Horizontal, row);
 
-        int sliderMin = 0;
-        int sliderMax = 100;
-        int sliderValue = 50;
-
-        if (prop.id() == PropertyId::Brightness) {
-            // brightness backend value is 0–255
-            sliderMin = 0;
-            sliderMax = 100;
-
-            int baseBrightness = item.brightness(); // 0–255 or -1
-            if (baseBrightness >= 0) {
-                sliderValue = (baseBrightness * 100) / 255;
-            } else {
-                sliderValue = 50;
-            }
-        }
-        else if (prop.id() == PropertyId::Contrast) {
-            // contrast backend value is already 0–100
-            sliderMin = 0;
-            sliderMax = 100;
-            sliderValue = prop.value(); // 0–100, default 50
-        }
+        int sliderMin   = prop.min();
+        int sliderMax   = prop.max();
+        int sliderValue = prop.value();  // directly from backend
 
         slider->setRange(sliderMin, sliderMax);
         slider->blockSignals(true);
@@ -96,6 +76,7 @@ void ImageViewer::rebuildPropertiesUI(ImageItem &item)
 
     m_propertiesLayout->addStretch();
 }
+
 
 
 
@@ -146,19 +127,11 @@ void ImageViewer::onImageSelected(QListWidgetItem *item){
     m_currentImageIndex = imageIndex;
     ImageItem &imgAtIndex = m_images[imageIndex];
 
-    // 1) Load image in backend
     if (!imgAtIndex.loadImage()) {
         qDebug() << "Could not load image in backend:" << imgAtIndex.filepath();
         return;
     }
 
-    // 2) Compute brightness in backend (fills ImageProperty)
-    if (imgAtIndex.computeBrightness()) {
-        int avg = imgAtIndex.brightness();   // 0–255
-        qDebug() << "Average brightness (0-255):" << avg;
-    }
-
-    // 3) Show the original image (no adjustment yet)
     const QImage &img = imgAtIndex.originalImage();
     if (!img.isNull())
     {
@@ -173,9 +146,9 @@ void ImageViewer::onImageSelected(QListWidgetItem *item){
         qDebug() << "Image is null after load:" << imgAtIndex.filepath();
     }
 
-    // 4) Rebuild right panel controls based on this image's properties
     rebuildPropertiesUI(imgAtIndex);
 }
+
 
 void ImageViewer::onPropertySliderChanged(int value)
 {
@@ -188,7 +161,6 @@ void ImageViewer::onPropertySliderChanged(int value)
         return;
     }
 
-    // Find which property this slider belongs to
     PropertyId idToApply;
     bool found = false;
 
@@ -205,32 +177,32 @@ void ImageViewer::onPropertySliderChanged(int value)
     }
 
     ImageItem &imgItem = m_images[m_currentImageIndex];
-    QImage adjusted;
 
+    bool ok = false;
     switch (idToApply) {
     case PropertyId::Brightness:
-        if (!imgItem.applyBrightnessLevel(value, adjusted)) {
-            qDebug() << "Failed to apply brightness level";
-            return;
-        }
+        ok = imgItem.applyBrightnessLevel(value);
+        if (!ok) qDebug() << "Failed to apply brightness level";
         break;
 
     case PropertyId::Contrast:
-        if (!imgItem.applyContrastLevel(value, adjusted)) {
-            qDebug() << "Failed to apply contrast level";
-            return;
-        }
+        ok = imgItem.applyContrastLevel(value);
+        if (!ok) qDebug() << "Failed to apply contrast level";
         break;
 
     default:
         return;
     }
 
-    QPixmap pix = QPixmap::fromImage(adjusted);
+    if (!ok) return;
+
+    const QImage &img = imgItem.editedImage();
+    QPixmap pix = QPixmap::fromImage(img);
     ui->imageLabel->setPixmap(
         pix.scaled(ui->imageLabel->size(),
                    Qt::KeepAspectRatio,
                    Qt::SmoothTransformation)
         );
 }
+
 
