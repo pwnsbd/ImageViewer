@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>1099</width>
     <height>600</height>
    </rect>
   </property>
@@ -20,7 +20,7 @@
       <x>0</x>
       <y>0</y>
       <width>181</width>
-      <height>571</height>
+      <height>581</height>
      </rect>
     </property>
    </widget>
@@ -37,13 +37,23 @@
      <string>TextLabel</string>
     </property>
    </widget>
+   <widget class="QWidget" name="propertiesPanel" native="true">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>-1</y>
+      <width>191</width>
+      <height>571</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1099</width>
      <height>21</height>
     </rect>
    </property>

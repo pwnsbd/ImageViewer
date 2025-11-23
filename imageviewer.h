@@ -3,6 +3,13 @@
 
 #include <QMainWindow>
 #include <QListWidgetItem>
+#include <QImage>
+#include <QVector>
+#include <QVBoxLayout>
+#include <QSlider>
+#include <QLabel>
+
+#include "ImageItem.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,9 +27,28 @@ public:
 
 private:
     Ui::ImageViewer *ui;
+    QVector<ImageItem> m_images;
+    int m_currentImageIndex = -1;
+
+    QVBoxLayout *m_propertiesLayout = nullptr;
+
+    // One control per property
+    struct PropertyControl {
+        PropertyId id;
+        QSlider* slider;
+        QLabel*  label;
+    };
+    QVector<PropertyControl> m_propertyControls;
 
 private slots:
     void onOpenFolderClicked();
     void onImageSelected(QListWidgetItem *item);
+
+    void onPropertySliderChanged(int value);
+
+private:
+    void rebuildPropertiesUI(ImageItem &item);
+    void clearPropertiesUI();
 };
+
 #endif // IMAGEVIEWER_H

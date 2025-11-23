@@ -1,47 +1,74 @@
-# ---- Qt/Qt Creator ----
-# IDE/user-specific
+# ----------------------
+# Qt / Qt Creator ignore
+# ----------------------
+
+# Qt Creator user/IDE files
 *.pro.user
 *.pro.user.*
 *.creator.user
+*.user
+*.user.*
+.qtc_clangd/
+.qmake.stash
+
+# Editors/IDE misc
+.idea/
+.vscode/
 *.kate-swp
 *.swp
 *.DS_Store
 
-# Build directories (common Qt Creator patterns)
+# ----------------------
+# Build directories
+# ----------------------
+build/
+*/build*/
 build-*/
 bin/
 obj/
 out/
-[Cc]Make[Bb]uild*/
+
+# ----------------------
+# CMake build artifacts
+# ----------------------
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
+[Cc]Make[Bb]uild*/
 compile_commands.json
 Makefile
 *.make
+*.ninja
+*.ninja_deps
+*.ninja_log
+*.cmake/api/*
+
+# ----------------------
+# Qt auto-generated files (moc/ui/qrc)
+# ----------------------
+*_autogen/
+*.autogen/
 moc_*.cpp
 ui_*.h
 qrc_*.cpp
-*.qm
 
-# Platform-specific binaries/objects
+# ----------------------
+# Binaries & object files
+# ----------------------
 *.o
 *.obj
 *.a
 *.lib
-*.dll
 *.so
+*.dll
 *.dylib
 *.exe
 *.pdb
 
-# Qt caches
-.qmake.stash
-.qtc_clangd/
-.idea/
-.vscode/
-
-# Logs & temps
+# ----------------------
+# Misc build output
+# ----------------------
+*.qm
 *.log
 *.tmp
 *.temp
