@@ -27,6 +27,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ImageProperty.h
         ImageItem.h ImageItem.cpp
         imageitem.h imageitem.cpp
+        imageprocessor.h imageprocessor.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ImageViewer APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

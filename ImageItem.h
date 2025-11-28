@@ -1,21 +1,16 @@
 #ifndef IMAGEITEM_H
 #define IMAGEITEM_H
 
-#include <QString>
 #include <QImage>
 #include <QVector>
-#include <QDebug>
 
 #include "ImageProperty.h"
 
-class ImageItem {
-
+class ImageItem
+{
 public:
-    explicit ImageItem(const QString& filepath);
-
-    QString filepath() const { return m_filepath; }
-
-    bool loadImage();
+    // Construct from an already-loaded image (no filepath here)
+    explicit ImageItem(const QImage& originalImage);
 
     const QImage& originalImage() const { return m_originalImage; }
 
@@ -26,22 +21,21 @@ public:
 
     bool hasEdits() const { return m_hasEdits; }
 
-    void resetEdits() {
-        m_editedImage = m_originalImage;
-        m_hasEdits = false;
-    }
+    void resetEdits();
 
     const QVector<ImageProperty>& properties() const { return m_properties; }
 
-    // Editing operations (no outImage; backend updates its own state)
-    bool applyBrightnessLevel(int sliderValue); // 0–100
-    bool applyContrastLevel(int sliderValue);   // 0–100
+    // Generic property access
+    int  propertyValue(PropertyId id) const;
+    bool setPropertyValue(PropertyId id, int value);
+
+    // For the processor to push new image data
+    void setEditedImage(const QImage& img);
 
 private:
-    QString m_filepath;
-    QImage  m_originalImage;
-    QImage  m_editedImage;
-    bool    m_hasEdits = false;
+    QImage m_originalImage;
+    QImage m_editedImage;
+    bool   m_hasEdits = false;
 
     QVector<ImageProperty> m_properties;
 

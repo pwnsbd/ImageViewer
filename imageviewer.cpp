@@ -1,8 +1,11 @@
 #include "imageviewer.h"
 #include "./ui_imageviewer.h"
+
 #include <QFileDialog>
 #include <QDir>
 #include <QPixmap>
+#include <QDebug>
+#include <QHBoxLayout>
 
 ImageViewer::ImageViewer(QWidget *parent)
     : QMainWindow(parent)
@@ -21,9 +24,16 @@ ImageViewer::ImageViewer(QWidget *parent)
     m_propertiesLayout->setSpacing(6);
 }
 
+ImageViewer::~ImageViewer()
+{
+    delete ui;
+}
 
 void ImageViewer::clearPropertiesUI()
 {
+    if (!m_propertiesLayout)
+        return;
+
     while (QLayoutItem* item = m_propertiesLayout->takeAt(0)) {
         if (QWidget* w = item->widget()) {
             w->deleteLater();
@@ -33,7 +43,6 @@ void ImageViewer::clearPropertiesUI()
     m_propertyControls.clear();
 }
 
-
 void ImageViewer::rebuildPropertiesUI(ImageItem &item)
 {
     clearPropertiesUI();
@@ -42,6 +51,7 @@ void ImageViewer::rebuildPropertiesUI(ImageItem &item)
 
     for (const ImageProperty &prop : props) {
 
+        // You can keep this filter or remove it if you add more properties later
         if (prop.id() != PropertyId::Brightness &&
             prop.id() != PropertyId::Contrast)
             continue;
@@ -77,19 +87,15 @@ void ImageViewer::rebuildPropertiesUI(ImageItem &item)
     m_propertiesLayout->addStretch();
 }
 
-
-
-
-ImageViewer::~ImageViewer()
+void ImageViewer::onOpenFolderClicked()
 {
-    delete ui;
-}
+    QString folderPath = QFileDialog::getExistingDirectory(
+        this,
+        tr("Select Folder"),
+        QDir::homePath()
+        );
 
-void ImageViewer::onOpenFolderClicked(){
-    QString folderPath = QFileDialog::getExistingDirectory(this, "Select Folder", QDir::homePath());
-
-    if(folderPath.isEmpty())
-    {
+    if (folderPath.isEmpty()) {
         return;
     }
 
@@ -101,11 +107,20 @@ void ImageViewer::onOpenFolderClicked(){
     m_images.clear();
     m_currentImageIndex = -1;
 
-    for(const QString &fileName : files)
-    {
+    clearPropertiesUI();
+    ui->imageLabel->clear();
+
+    for (const QString &fileName : files) {
         QString fullPath = dir.absoluteFilePath(fileName);
 
-        m_images.push_back(ImageItem(fullPath));
+        QImage img(fullPath);
+        if (img.isNull()) {
+            qDebug() << "Failed to load image:" << fullPath;
+            continue;
+        }
+
+        // Now ImageItem is purely an in-memory document
+        m_images.push_back(ImageItem(img));
         int index = m_images.length() - 1;
 
         QListWidgetItem *item = new QListWidgetItem(fileName);
@@ -114,12 +129,12 @@ void ImageViewer::onOpenFolderClicked(){
     }
 }
 
-void ImageViewer::onImageSelected(QListWidgetItem *item){
+void ImageViewer::onImageSelected(QListWidgetItem *item)
+{
     bool ok = false;
     int imageIndex = item->data(Qt::UserRole).toInt(&ok);
 
-    if(!ok || imageIndex < 0 || imageIndex >= m_images.length())
-    {
+    if (!ok || imageIndex < 0 || imageIndex >= m_images.length()) {
         qDebug() << "Invalid image index";
         return;
     }
@@ -127,32 +142,28 @@ void ImageViewer::onImageSelected(QListWidgetItem *item){
     m_currentImageIndex = imageIndex;
     ImageItem &imgAtIndex = m_images[imageIndex];
 
-    if (!imgAtIndex.loadImage()) {
-        qDebug() << "Could not load image in backend:" << imgAtIndex.filepath();
-        return;
-    }
-
-    const QImage &img = imgAtIndex.originalImage();
-    if (!img.isNull())
-    {
+    const QImage &img = imgAtIndex.editedImage(); // original if no edits
+    if (!img.isNull()) {
         QPixmap pix = QPixmap::fromImage(img);
         ui->imageLabel->setPixmap(
             pix.scaled(ui->imageLabel->size(),
                        Qt::KeepAspectRatio,
                        Qt::SmoothTransformation)
             );
-    }
-    else {
-        qDebug() << "Image is null after load:" << imgAtIndex.filepath();
+    } else {
+        qDebug() << "Image is null at selected index";
+        ui->imageLabel->clear();
     }
 
     rebuildPropertiesUI(imgAtIndex);
 }
 
-
 void ImageViewer::onPropertySliderChanged(int value)
 {
-    if (m_currentImageIndex < 0 || m_currentImageIndex >= m_images.size()) {
+    Q_UNUSED(value);
+
+    if (m_currentImageIndex < 0 ||
+        m_currentImageIndex >= m_images.size()) {
         return;
     }
 
@@ -178,31 +189,26 @@ void ImageViewer::onPropertySliderChanged(int value)
 
     ImageItem &imgItem = m_images[m_currentImageIndex];
 
-    bool ok = false;
-    switch (idToApply) {
-    case PropertyId::Brightness:
-        ok = imgItem.applyBrightnessLevel(value);
-        if (!ok) qDebug() << "Failed to apply brightness level";
-        break;
-
-    case PropertyId::Contrast:
-        ok = imgItem.applyContrastLevel(value);
-        if (!ok) qDebug() << "Failed to apply contrast level";
-        break;
-
-    default:
+    // 1) Update the property on the document
+    if (!imgItem.setPropertyValue(idToApply, slider->value())) {
         return;
     }
 
-    if (!ok) return;
-
-    const QImage &img = imgItem.editedImage();
-    QPixmap pix = QPixmap::fromImage(img);
-    ui->imageLabel->setPixmap(
-        pix.scaled(ui->imageLabel->size(),
-                   Qt::KeepAspectRatio,
-                   Qt::SmoothTransformation)
+    // 2) Recompute edited image using the processor
+    QImage newEdited = ImageProcessor::applyAll(
+        imgItem.originalImage(),
+        imgItem.properties()
         );
+    imgItem.setEditedImage(newEdited);
+
+    // 3) Display the new edited image
+    const QImage &img = imgItem.editedImage();
+    if (!img.isNull()) {
+        QPixmap pix = QPixmap::fromImage(img);
+        ui->imageLabel->setPixmap(
+            pix.scaled(ui->imageLabel->size(),
+                       Qt::KeepAspectRatio,
+                       Qt::SmoothTransformation)
+            );
+    }
 }
-
-

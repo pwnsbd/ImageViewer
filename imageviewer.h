@@ -10,6 +10,7 @@
 #include <QLabel>
 
 #include "ImageItem.h"
+#include "ImageProcessor.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
