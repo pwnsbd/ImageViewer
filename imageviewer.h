@@ -8,7 +8,9 @@
 #include <QVBoxLayout>
 #include <QSlider>
 #include <QLabel>
+#include <QGroupBox>
 
+#include "HistogramWidget.h"
 #include "ImageItem.h"
 #include "ImageProcessor.h"
 
@@ -17,6 +19,8 @@ namespace Ui {
 class ImageViewer;
 }
 QT_END_NAMESPACE
+
+class QResizeEvent;
 
 class ImageViewer : public QMainWindow
 {
@@ -32,11 +36,14 @@ private:
     int m_currentImageIndex = -1;
 
     QVBoxLayout *m_propertiesLayout = nullptr;
+    QVBoxLayout *m_adjustmentsLayout = nullptr;
+    HistogramWidget *m_histogramWidget = nullptr;
+    QLabel *m_adjustmentsHintLabel = nullptr;
 
     struct PropertyControl {
         PropertyId id;
         QSlider*   slider;
-        QLabel*    label;
+        QLabel*    valueLabel;
     };
     QVector<PropertyControl> m_propertyControls;
 
@@ -48,6 +55,13 @@ private slots:
 private:
     void rebuildPropertiesUI(ImageItem &item);
     void clearPropertiesUI();
+    void updateDisplayedImage(const QImage &image);
+    void setupLayout();
+    void setupImageListStyle();
+    void showPropertiesEmptyState();
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 };
 
 #endif // IMAGEVIEWER_H
